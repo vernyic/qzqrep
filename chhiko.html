@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHIKO CHIKOLATTE</title>
+<style>
+body {
+  margin:0;
+  font-family: Georgia, serif;
+  background: linear-gradient(135deg,#f7e6ea,#ffc2d1);
+  overflow-x:hidden;
+}
+.nav {
+  position: fixed;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 40px;
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+}
+.nav a {margin:0 10px;text-decoration:none;color:black;font-weight:bold;}
+.hero {
+  height: 90vh;
+  display:flex;
+  flex-direction: column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+}
+.hero h1 {font-size: 60px;animation: glow 2s infinite alternate;}
+@keyframes glow {from {text-shadow:0 0 10px white;}to {text-shadow:0 0 30px pink;}}
+.hero p {font-size: 20px;margin:10px 0;}
+.btn {padding:12px 25px;border:none;border-radius:25px;background: black;color:white;cursor:pointer;margin-top:10px;transition:0.3s;}
+.btn:hover {transform: scale(1.05);}
+.products {display:flex; flex-wrap:wrap; justify-content:center; gap:30px; padding:60px 20px;}
+.card {width:240px; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); border-radius: 15px; padding:20px; text-align:center; transition:0.4s; position:relative;}
+.card:hover {transform: translateY(-8px) scale(1.03);}
+.cart {position: fixed; top: 80px; right: 20px; width: 260px; max-height: 400px; overflow-y: auto; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); opacity: 0; transform: translateY(-20px); pointer-events: none; transition: 0.3s; z-index: 200;}
+.cart.open {opacity: 1; transform: translateY(0); pointer-events: auto;}
+.count {background: black; color: white; border-radius: 50%; padding: 3px 7px; font-size: 12px; margin-left: 5px;}
+.fly {position: fixed; width: 20px; height: 20px; background: pink; border-radius: 50%; pointer-events: none; z-index: 999; transition: 0.8s cubic-bezier(.7,-0.3,.3,1.5);}
+.gallery {display:flex; flex-wrap:wrap;}
+.gallery img {width:25%; transition:0.4s;}
+.gallery img:hover {transform: scale(1.2);}
+form {display:flex; flex-direction:column; align-items:center; margin:50px 0;}
+input, textarea {width:80%; padding:10px; margin:5px; border-radius:10px; border:1px solid #ccc;}
+textarea {resize:none;}
+footer {text-align:center; padding:20px; background: rgba(255,255,255,0.6); backdrop-filter: blur(10px); margin-top:50px;}
+</style>
+</head>
+<body>
+<div class="nav">
+  <b>CHIKO CHIKOLATTE</b>
+  <div>
+    <a href="#hero">Главная</a>
+    <a href="#menu">Меню</a>
+    <a href="#gallery">Галерея</a>
+    <a href="#contact">Заказ</a>
+  </div>
+</div>
+
+<section id="hero" class="hero">
+  <h1>CHIKO CHIKOLATTE</h1>
+  <p>Премиальные десерты 🍓🍫</p>
+  <button class="btn" onclick="scrollToSection('menu')">Смотреть меню</button>
+</section>
+
+<section id="menu">
+<h2 align="center">Меню</h2>
+<div class="products" id="product-list"></div>
+</section>
+
+<div class="cart" id="cart">
+  <h3>Корзина <span id="cartCount" class="count">0</span></h3>
+  <div id="cartItems"></div>
+  <h4 id="total">0 ₸</h4>
+  <button class="btn" onclick="sendWhatsAppOrder()">Отправить в WhatsApp</button>
+</div>
+
+<section id="gallery">
+<h2 align="center">Галерея</h2>
+<div class="gallery">
+  <img src="1.jpg" alt="Продукт">
+  <img src="2.jpg" alt="Продукт">
+  <img src="3.jpg" alt="Продукт">
+  <img src="4.jpg" alt="Продукт">
+</div>
+</section>
+
+<section id="contact">
+<h2 align="center">Связаться через WhatsApp</h2>
+<form onsubmit="sendWhatsAppForm(event)">
+  <input type="text" placeholder="Ваше имя" id="name" required>
+  <input type="tel" placeholder="Телефон" id="phone" required>
+  <textarea placeholder="Комментарий к заказу" id="orderMessage"></textarea>
+  <button type="submit" class="btn">Отправить</button>
+</form>
+</section>
+
+<footer>CHIKO CHIKOLATTE © 2026</footer>
+
+<script>
+// ===== ПРОДУКТЫ =====
+const products = [
+  {name:"Макаронсы", price:3000},
+  {name:"Клубника в шоколаде", price:5000},
+  {name:"Фрукты в шоколаде", price:6000}
+];
+
+let cart = [];
+const productList = document.getElementById("product-list");
+const cartItems = document.getElementById("cartItems");
+const totalEl = document.getElementById("total");
+const cartCount = document.getElementById("cartCount");
+
+productList.innerHTML = '';
+products.forEach((p,i)=>{
+  productList.innerHTML += `<div class="card">
+    <h3>${p.name}</h3>
+    <p>${p.price} ₸</p>
+    <button class="btn" onclick="addToCart(event, ${i})">Добавить</button>
+  </div>`;
+});
+
+function addToCart(e,i){
+  cart.push(products[i]);
+  renderCart();
+
+  const fly = document.createElement("div");
+  fly.className = "fly";
+  const rect = e.target.getBoundingClientRect();
+  fly.style.left = rect.left + "px";
+  fly.style.top = rect.top + "px";
+  document.body.appendChild(fly);
+  setTimeout(()=>{fly.style.left=(window.innerWidth-50)+"px"; fly.style.top="20px";},10);
+  setTimeout(()=>fly.remove(),800);
+
+  document.getElementById("cart").classList.add("open");
+}
+
+function renderCart(){
+  let html = '', total = 0;
+  cart.forEach(item => { html += `<p>${item.name} - ${item.price} ₸</p>`; total += item.price; });
+  cartItems.innerHTML = html || '<p>Корзина пуста</p>';
+  totalEl.innerText = total + " ₸";
+  cartCount.innerText = cart.length;
+}
+
+function sendWhatsAppOrder(){
+  if(cart.length === 0){ alert("Добавьте товары в корзину"); return; }
+  let msg = "Хочу заказать:\n";
+  cart.forEach(item=>msg+=`${item.name} - ${item.price} ₸\n`);
+  const waNumber = "77473335213";
+  window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`,"_blank");
+}
+
+function sendWhatsAppForm(e){
+  e.preventDefault();
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+  const comment = document.getElementById("orderMessage").value;
+  const waNumber = "77473335213";
+  const msg = `Имя: ${name}\nТелефон: ${phone}\nКомментарий: ${comment}`;
+  window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`,"_blank");
+}
+
+function scrollToSection(id){
+  document.getElementById(id).scrollIntoView({behavior:"smooth"});
+}
+</script>
+</body>
+</html>
