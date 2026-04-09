@@ -1,1 +1,1 @@
-qzqrep.co,
+qzqrep.com
